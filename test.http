@@ -1,0 +1,2 @@
+### Importar datos desde el Excel real
+POST http://localhost:8081/api/activities/import?path=C:/Users/Lezam/ReactNative/ProductivityApp/ProductivityExcel.xlsx
