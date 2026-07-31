@@ -1,7 +1,8 @@
 package com.cuervo.erp_personal.security;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.stereotype.Component;
+
+import java.security.SignatureException;
 import java.util.Date;
 @Component
 public class JwtUtils {
@@ -23,5 +24,22 @@ public class JwtUtils {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    // método clave para validar el token de forma segura
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
+            return true;
+        } catch (MalformedJwtException e) {
+            System.err.println("Token JWT malformado: " + e.getMessage());
+        } catch (ExpiredJwtException e) {
+            System.err.println("Token JWT expirado: " + e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            System.err.println("Token JWT no soportado: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.err.println("JWT claims string está vacío: " + e.getMessage());
+        }
+        return false;
     }
 }

@@ -25,11 +25,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
         String authHeader = request.getHeader("Authorization");
 
-        System.out.println("*********************+DEBUG - Header Authorization recibido: " + authHeader);
+        System.out.println("DEBUG - Header Authorization recibido: " + authHeader);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            String email = jwtUtils.getEmailFromToken(token);
+            /*String email = jwtUtils.getEmailFromToken(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
@@ -37,6 +37,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+            }*/
+
+            if (jwtUtils.validateToken(token)) {
+
+                String email = jwtUtils.getEmailFromToken(token);
+
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } else {
+                // Opcional: Imprimir en consola si el token fue rechazado
+                System.out.println("DEBUG - Token rechazado (inválido, expirado o malformado).");
             }
         }
         filterChain.doFilter(request, response);

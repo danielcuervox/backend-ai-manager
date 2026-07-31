@@ -28,9 +28,11 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private AuthProvider provider;
-    private Integer points;
-    private Integer level;
+    private Integer points = 0;
+    private Integer level = 1;
+    private Integer coins = 0;
     private String timezone;
+    private String avatar;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Activity> activities;
