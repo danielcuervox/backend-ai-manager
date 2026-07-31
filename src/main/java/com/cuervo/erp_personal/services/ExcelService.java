@@ -68,7 +68,7 @@ public class ExcelService {
 
             // se mapea la Columna 3: Categoría (Texto)
             Cell cellCat = row.getCell(3);
-            activity.setCategory(cellCat != null ? cellCat.getStringCellValue() : "");
+            //activity.setCategory(cellCat != null ? cellCat.getStringCellValue() : "");
 
             // se mapea la Columna 4: Categoría (Texto)
             Cell cellComment = row.getCell(4);

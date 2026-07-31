@@ -1,5 +1,6 @@
 package com.cuervo.erp_personal.services;
 
+import com.cuervo.erp_personal.dto.ChatMessageDto;
 import com.cuervo.erp_personal.models.ReportStyle;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class GeminiService {
     private final RestClient restClient = RestClient.create();
 
 
-    public String generateDailySummary(String activitiesJson, String strGoals, String strDailyGoals) {
+    public String generateDailySummary(String activitiesJson, String strGoals, String strDailyGoals, String coachPersonality, String language) {
         //GOOGLE
         //String modelName = "gemini-2.0-flash-lite";
         //String url = "https://generativelanguage.googleapis.com/v1beta/models/" + modelName + ":generateContent?key=" + apiKey;
@@ -45,12 +46,10 @@ public class GeminiService {
                 "Sports Coach with Performance-Oriented Style",
                 "Psychologist with Cognitive-Analytical Style",
                 "Professional Manager with Systemic-Organizational Style"};
-
-        ReportStyle style = ReportStyle.getRandomStyle();
-        String styleDescription = style.getDescription();
+        //federico el grande - William Wallace - Vercinhetorix
 
         // Construimos el prompt estructurado para la IA
-        String prompt = "Act as my professional Productivity Coach with the persona of: " + styleDescription + ". " +
+        String prompt = "Act as my professional Productivity Coach with the persona of: " + coachPersonality + ". " +
                 "### INSTRUCTIONS FOR YOUR PERSONA:\n" +
                 "- Use the second person ('you').\n" +
                 "- Adopt the vocabulary, mannerisms, and strategic mindset of this person.\n" +
@@ -63,7 +62,7 @@ public class GeminiService {
                 "- Weekly Goals (Strategy): " + strGoals + "\n" +
                 "- Daily Habits (Consistency): " + strDailyGoals + "\n\n" +
 
-                "### YOUR TASK: Generate a report covering these sections:\n" +
+                "### YOUR TASK: Generate a report in " + language + " covering these sections: \n" +
                 "1) Executive Summary: An ultra-condensed paragraph optimized for monthly archives.\n" +
                 "2) Global Performance & Alignment: Evaluate how your daily work aligns with your Weekly Goals and Daily Habits. Be direct about where you are failing or succeeding.\n" +
                 "3) Insights: Identify major strengths and specific distractions or bottlenecks.\n" +
@@ -98,6 +97,81 @@ public class GeminiService {
 
         } catch (Exception e) {
             return "Error al conectar con Gemini API: " + e.getMessage();
+        }
+    }
+
+    public String chatWithContext(ReportStyle style, String summary, List<ChatMessageDto> history, String message, String language) {
+
+        // se el contexto para Gemini con la personalidad y el reporte previo
+        StringBuilder promptBuilder = new StringBuilder();
+
+        String langInstruction;
+        switch (language != null ? language.toLowerCase() : "es") {
+            case "en":
+                langInstruction = "IMPORTANT: Respond ALWAYS in English.";
+                break;
+            case "fr":
+                langInstruction = "IMPORTANT: Réponds TOUJOURS en Français.";
+                break;
+            case "de":
+                langInstruction = "WICHTIG: Antworte IMMER auf Deutsch.";
+                break;
+            case "es":
+            default:
+                langInstruction = "IMPORTANTE: Responde SIEMPRE en Español.";
+                break;
+        }
+
+        promptBuilder.append("System Role & Persona: ")
+                .append(style != null ? style.getDescription() : "Performance Manager")
+                .append("\n").append(langInstruction).append("\n\n");
+
+
+        promptBuilder.append("Este es el reporte diario que generaste previamente para el usuario:\n")
+                .append(summary)
+                .append("\n\n");
+
+        promptBuilder.append("Historial de conversación previa:\n");
+        if (history != null && !history.isEmpty()) {
+            for (ChatMessageDto msg : history) {
+                promptBuilder.append(msg.getSender().toUpperCase())
+                        .append(": ")
+                        .append(msg.getText())
+                        .append("\n");
+            }
+        }
+
+        promptBuilder.append("NUEVO MENSAJE DEL USUARIO: ").append(message).append("\n");
+        promptBuilder.append("Responde manteniendo estrictamente tu personaje y respondiendo a su mensaje:");
+
+
+        return callGroqApi(promptBuilder.toString());
+    }
+
+    private String callGroqApi(String prompt) {
+        String url = "https://api.groq.com/openai/v1/chat/completions";
+
+        Map<String, Object> requestBody = Map.of(
+                "model", "llama-3.3-70b-versatile",
+                "messages", List.of(Map.of("role", "user", "content", prompt))
+        );
+
+        try {
+            Map<String, Object> response = restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(Map.class);
+
+            List<?> choices = (List<?>) response.get("choices");
+            Map<?, ?> firstChoice = (Map<?, ?>) choices.get(0);
+            Map<?, ?> message = (Map<?, ?>) firstChoice.get("message");
+            return (String) message.get("content");
+
+        } catch (Exception e) {
+            return "Error al conectar con la API de IA: " + e.getMessage();
         }
     }
 }

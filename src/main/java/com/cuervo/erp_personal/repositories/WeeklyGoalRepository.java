@@ -8,5 +8,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface WeeklyGoalRepository extends JpaRepository<WeeklyGoal, Long> {
-    List<WeeklyGoal> findAllByWeekStartDate(LocalDate date);
+    //List<WeeklyGoal> findAllByWeekStartDate(LocalDate date);
 }

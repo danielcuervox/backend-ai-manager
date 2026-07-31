@@ -18,9 +18,9 @@ public class WeeklyGoal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDate date;
-    private LocalDate weekStartDate; // El lunes de la semana
-
-    private String targetName;// Ej: "Programming", "Meetings", "German"
-    private int targetHours; // Ej: 30, 5, 3
+    private String weeklyTargetName;// Ej: "Programming", "Meetings", "German" target
+    private int weeklyTargetHours; // Ej: 30, 5, 3
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

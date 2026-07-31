@@ -37,7 +37,7 @@ public class AnalyticsService {
                 .orElse(0.0);
     }
 
-    public double calculateAverageByCategory(String category) {
+    /*public double calculateAverageByCategory(String category) {
         List<Activity> activities = activityRepository.findAll();
 
         if (activities.isEmpty()) {
@@ -49,13 +49,13 @@ public class AnalyticsService {
                 .mapToInt(Activity::getResult)
                 .average()
                 .orElse(0.0);
-    }
+    }*/
 
-    public Map<String, Double> getWeeklyPartialResults(LocalDate today){
+   /* public Map<String, Double> getWeeklyPartialResults(LocalDate today){
 
-        LocalDate weekStartDate = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+        *//*LocalDate weekStartDate = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
 
-        List<WeeklyGoal> goals = weeklyGoalRepository.findAllByWeekStartDate(weekStartDate);
+        List<WeeklyGoal> goals = weeklyGoalRepository.findAll();
         List<Activity> activities = activityRepository.findByDateBetween(weekStartDate, today);
 
         Map<String, Double> results = new HashMap<>();
@@ -73,8 +73,8 @@ public class AnalyticsService {
             results.put(goal.getTargetName(), totalHours);
         }
 
-        return results;
-    }
+        return results;*//*
+    }*/
 
 
 }

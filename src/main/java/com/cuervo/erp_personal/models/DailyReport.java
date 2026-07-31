@@ -21,5 +21,17 @@ public class DailyReport {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String summary;
+    @Enumerated(EnumType.STRING)
+    private ReportStyle usedStyle;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
+
+    public String getPhoto() {
+        if (this.usedStyle != null) {
+            return this.usedStyle.getPhoto();
+        }
+        return "default.png";
+    }
 }
