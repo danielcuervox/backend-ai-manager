@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "daily_reports")
-@Data // <--- Lombok hace la magia
+@Table(name = "daily_reports", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"date", "user_id"})
+})
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class DailyReport {
@@ -16,16 +18,17 @@ public class DailyReport {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private LocalDate date;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String summary;
+
     @Enumerated(EnumType.STRING)
     private ReportStyle usedStyle;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     public String getPhoto() {

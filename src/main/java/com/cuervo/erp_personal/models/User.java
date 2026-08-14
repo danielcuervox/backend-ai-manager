@@ -33,8 +33,46 @@ public class User {
     private Integer coins = 0;
     private String timezone;
     private String avatar;
+    private Integer streak = 0;
+    private LocalDate lastLoginDate;
 
+    @PrePersist
+    protected void onCreate() {
+        if (this.avatar == null || this.avatar.isEmpty()) {
+            this.avatar = "/assets/avatars/default_avatar.jpg";
+        }
+    }
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Activity> activities;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<UserItem> inventory;
+
+
+    public void updateStreak() {
+        LocalDate today = LocalDate.now();
+
+        // Si lastLoginDate es null, es la primera vez que entra
+        if (this.lastLoginDate == null) {
+            this.streak = 1;
+            this.lastLoginDate = today;
+        }
+        // si la conexión fue ayer
+        else if (this.lastLoginDate.equals(today.minusDays(1))) {
+            this.streak += 1;
+            this.lastLoginDate = today;
+        }
+        // Si la última conexión no se hace nada
+        else if (this.lastLoginDate.equals(today)) {
+            return;
+        }
+        // Si han pasan más de dos días se rompe la racha
+        else {
+            this.streak = 1;
+            this.lastLoginDate = today;
+        }
+    }
 }
+
+
 

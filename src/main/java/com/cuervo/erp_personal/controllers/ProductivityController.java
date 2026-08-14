@@ -1,10 +1,12 @@
 package com.cuervo.erp_personal.controllers;
 
 import com.cuervo.erp_personal.dto.ReportRequest;
+import com.cuervo.erp_personal.dto.UserProfileDTO;
 import com.cuervo.erp_personal.models.*;
 import com.cuervo.erp_personal.repositories.*;
 import com.cuervo.erp_personal.services.AnalyticsService;
 import com.cuervo.erp_personal.services.ExcelService;
+import com.cuervo.erp_personal.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,7 +34,9 @@ public class ProductivityController {
     @Autowired
     private WeeklyGoalRepository weeklyGoalRepository;
     @Autowired
-    private com.cuervo.erp_personal.repositories.DailyReportRepository dailyReportRepository;
+    DailyReportRepository dailyReportRepository;
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private com.cuervo.erp_personal.services.GeminiService geminiService;
@@ -138,8 +142,17 @@ public class ProductivityController {
         }
 
         activity.setUser(user);
+
+        int earnedPoints = userService.calculateActivityPoints(activity);
+
+
+        //agregar puntos usuario
+        userService.addPointsUser(user, earnedPoints);
+        //se da el mismo número de monedas por la efectividad de la actividad
+        userService.addCoinsUser(user, earnedPoints);
         return activityRepository.save(activity);
     }
+
 
     @GetMapping("/api/analytics/average")
     public Double getAverage(){
@@ -205,12 +218,16 @@ public class ProductivityController {
                 lang
         );
 
-        // 4. Guardamos o actualizamos el reporte diario en Supabase
-        DailyReport report = dailyReportRepository.findByDate(date).orElse(new DailyReport());
-
         //5. obtiene el usuario
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 4. Guardamos o actualizamos el reporte diario en Supabase
+        DailyReport report = dailyReportRepository.findByDateAndUser(date, user)
+                .orElse(new DailyReport());
+
+        //6. añade +1 punto por pedir el informe
+        userService.addPointsUser(user, 1);
 
         report.setDate(date);
         report.setSummary(aiSummary);
@@ -228,6 +245,8 @@ public class ProductivityController {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        userService.addPointsUser(user, 5);
 
         weeklyGoal.setUser(user);
         return weeklyGoalRepository.save(weeklyGoal);
@@ -291,6 +310,8 @@ public class ProductivityController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        userService.addPointsUser(user, 5);
+
         dailyGoal.setUser(user);
         return dailyGoalRepository.save(dailyGoal);
     }
@@ -352,6 +373,9 @@ public class ProductivityController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        //agrega un punto por crear una categoría
+        userService.addPointsUser(user, 1);
+
         category.setUser(user);
         return categoryRepository.save(category);
     }
@@ -401,6 +425,30 @@ public class ProductivityController {
     }
 
 
+    //------USUARIO
+
+    @GetMapping("/api/get-user")
+    public ResponseEntity<UserProfileDTO> getUserInfo() {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        user.updateStreak();
+        userRepository.save(user);
+
+        UserProfileDTO profile = new UserProfileDTO(
+                user.getUsername(),
+                user.getPoints(),
+                user.getCoins(),
+                user.getLevel(),
+                user.getStreak(),
+                user.getAvatar()
+        );
+
+        return ResponseEntity.ok(profile);
+    }
+
 
     public String prepareGoalSummary(List<WeeklyGoal> goals) {
         StringBuilder sb = new StringBuilder("Weekly Goals Status:\n");
@@ -413,5 +461,7 @@ public class ProductivityController {
         }
         return sb.toString();
     }
+
+
 
 }
