@@ -259,11 +259,7 @@ public class ProductivityController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-
-        // buscar actividades filtrando por FECHA Y por USUARIO
-        //return ResponseEntity.ok(activityRepository.findByDateAndUser(today, user));
-
-        List<WeeklyGoal> activities = weeklyGoalRepository.findAll();
+        List<WeeklyGoal> activities = weeklyGoalRepository.findByUser(user);
 
         System.out.println("DEBUG: Buscando para hoy/ayer. Encontradas: " + activities.size());
         return ResponseEntity.ok(activities);
@@ -324,10 +320,7 @@ public class ProductivityController {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
 
-        // buscar actividades filtrando por FECHA Y por USUARIO
-        //return ResponseEntity.ok(activityRepository.findByDateAndUser(today, user));
-
-        List<DailyGoal> dailyGoals = dailyGoalRepository.findAll();
+        List<DailyGoal> dailyGoals = dailyGoalRepository.findByUser(user);
 
         System.out.println("DEBUG: Buscando para hoy/ayer. Encontradas: " + dailyGoals.size());
         return ResponseEntity.ok(dailyGoals);
